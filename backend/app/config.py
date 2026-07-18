@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str | None = None
     
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "/etc/secrets/.env"),
         extra="ignore"
     )
 
