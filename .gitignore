@@ -1,0 +1,30 @@
+# Python environment and packaging
+.venv/
+venv/
+ENV/
+env/
+.poetry/
+dist/
+build/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Node/Frontend dependency folders
+node_modules/
+.pnpm-store/
+.yarn/
+dist/
+.next/
+out/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

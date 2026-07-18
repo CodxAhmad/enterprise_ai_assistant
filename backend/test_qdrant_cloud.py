@@ -1,0 +1,12 @@
+from qdrant_client import QdrantClient
+from app.config import settings
+
+client = QdrantClient(
+    url=settings.QDRANT_URL,
+    api_key=settings.QDRANT_API_KEY
+)
+
+collections = client.get_collections()
+
+print("Connected Successfully")
+print(collections)

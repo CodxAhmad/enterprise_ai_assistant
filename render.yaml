@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: enterprise-rag-api
+    env: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    plan: starter
+    autoDeploy: true
+    envVars:
+      - key: POSTGRES_URL
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LANGSMITH_TRACING
+        value: "true"
+      - key: LANGSMITH_ENDPOINT
+        value: "https://api.smith.langchain.com"
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_PROJECT
+        value: "enterprise_rag_assistant"
