@@ -26,5 +26,5 @@ COPY . .
 # Expose the port Uvicorn runs on
 EXPOSE 8000
 
-# Run Uvicorn using poetry
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Uvicorn directly (poetry already installed packages to system)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
