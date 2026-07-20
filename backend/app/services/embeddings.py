@@ -14,7 +14,7 @@ def _get_client():
 def generate_embeddings(texts: list[str]) -> list[list[float]]:
     client = _get_client()
     result = client.models.embed_content(
-        model="text-embedding-004",
+        model="gemini-embedding-001",
         contents=texts
     )
     return [e.values for e in result.embeddings]

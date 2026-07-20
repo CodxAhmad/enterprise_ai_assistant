@@ -33,13 +33,32 @@ def _get_sparse_model():
     return _sparse_model
 
 
-# Gemini text-embedding-004 produces 768-dimensional vectors
-EMBEDDING_DIM = 768
+# gemini-embedding-001 produces 3072-dimensional vectors
+EMBEDDING_DIM = 3072
 
 
 def init_qdrant():
     collections = client.get_collections()
     collection_names = [c.name for c in collections.collections]
+
+    if "document_chunks" in collection_names:
+        # Verify the existing collection has the correct vector dimension
+        try:
+            info = client.get_collection("document_chunks")
+            vectors_cfg = info.config.params.vectors
+            if isinstance(vectors_cfg, dict) and "dense" in vectors_cfg:
+                existing_dim = vectors_cfg["dense"].size
+            elif hasattr(vectors_cfg, "size"):
+                existing_dim = vectors_cfg.size
+            else:
+                existing_dim = None
+
+            if existing_dim != EMBEDDING_DIM:
+                print(f"Dimension mismatch ({existing_dim} vs {EMBEDDING_DIM}). Recreating collection...")
+                client.delete_collection("document_chunks")
+                collection_names = []  # Force recreate below
+        except Exception as e:
+            print(f"Could not verify collection dimensions: {e}")
 
     if "document_chunks" not in collection_names:
         client.create_collection(
@@ -54,9 +73,10 @@ def init_qdrant():
                 "sparse": SparseVectorParams()
             }
         )
-        print("Created document_chunks collection")
+        print(f"Created document_chunks collection with {EMBEDDING_DIM} dimensions")
     else:
-        print("document_chunks already exists")
+        print("document_chunks already exists with correct dimensions")
+
 
 
 def store_chunks(chunks, embeddings, document_id, filename):
