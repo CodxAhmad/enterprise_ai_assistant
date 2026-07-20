@@ -26,10 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -37,18 +35,27 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            {/* We'll handle full-page layouts inside specific pages if needed, but for authenticated pages, we show sidebar. Wait, middleware protects routes, so unauthenticated user might see sidebar? We can conditionally render sidebar if session exists, but Next.js Server Components can do this cleaner. For now, let's just assume simple layout or client-side check. Actually, let's keep it simple: */}
-            <div className="flex h-screen bg-background text-foreground">
-              {/* Note: In a real app, you might want to hide Sidebar on the /login page */}
-              <div className="hidden md:block">
+            <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+              <div style={{ display: "none" }} id="sidebar-mobile" />
+              {/* Desktop Sidebar */}
+              <div className="desktop-sidebar">
                 <Sidebar />
               </div>
-              <main className="flex-1 overflow-hidden">
+              <main style={{ flex: 1, overflow: "hidden" }}>
                 {children}
               </main>
             </div>
           </Providers>
         </ThemeProvider>
+
+        <style>{`
+          @media (min-width: 768px) {
+            .desktop-sidebar { display: block; }
+          }
+          @media (max-width: 767px) {
+            .desktop-sidebar { display: none; }
+          }
+        `}</style>
       </body>
     </html>
   );

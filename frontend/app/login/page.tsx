@@ -3,9 +3,6 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Button } from "../../components/ui/button"
 import { Bot } from "lucide-react"
 
 export default function LoginPage() {
@@ -13,16 +10,20 @@ export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    
+    setIsLoading(true)
+
     const res = await signIn("credentials", {
       username,
       password,
       redirect: false,
     })
+
+    setIsLoading(false)
 
     if (res?.error) {
       setError("Invalid credentials. Try admin / password")
@@ -33,52 +34,142 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-gray-50 fixed inset-0 z-50">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="space-y-1 items-center text-center">
-          <div className="bg-gray-100 p-3 rounded-full mb-2">
-            <Bot className="h-6 w-6 text-gray-900" />
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--main-bg)",
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "360px",
+          padding: "0 24px",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              background: "var(--main-text)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+            }}
+          >
+            <Bot size={24} color="var(--main-bg)" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
-          <CardDescription>
-            Enter your credentials to access the Enterprise Assistant
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none" htmlFor="username">
-                Username
-              </label>
-              <Input 
-                id="username" 
-                placeholder="admin" 
-                required 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none" htmlFor="password">
-                Password
-              </label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" type="submit">
-              Sign In
-            </Button>
-          </CardFooter>
+          <h1
+            style={{
+              fontSize: "22px",
+              fontWeight: 700,
+              color: "var(--main-text)",
+              margin: "0 0 6px",
+            }}
+          >
+            Welcome back
+          </h1>
+          <p style={{ fontSize: "14px", color: "var(--main-text-muted)", margin: 0 }}>
+            Sign in to your Enterprise AI Assistant
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <label
+              htmlFor="username"
+              style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--main-text)", marginBottom: "6px" }}
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              placeholder="admin"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: "10px",
+                border: "1px solid var(--input-border)",
+                background: "var(--input-bg)",
+                color: "var(--main-text)",
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--main-text)", marginBottom: "6px" }}
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: "10px",
+                border: "1px solid var(--input-border)",
+                background: "var(--input-bg)",
+                color: "var(--main-text)",
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {error && (
+            <p style={{ fontSize: "13px", color: "#dc2626", margin: 0 }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              marginTop: "4px",
+              width: "100%",
+              padding: "11px",
+              borderRadius: "10px",
+              border: "none",
+              background: "var(--button-primary)",
+              color: "var(--button-primary-text)",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.7 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
+            {isLoading ? "Signing in…" : "Sign In"}
+          </button>
         </form>
-      </Card>
+      </div>
     </div>
   )
 }

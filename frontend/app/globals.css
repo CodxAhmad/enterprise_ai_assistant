@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light theme — like ChatGPT's light mode */
+  --sidebar-bg: #f9f9f9;
+  --sidebar-border: #e5e5e5;
+  --sidebar-text: #0d0d0d;
+  --sidebar-text-muted: #6b6b6b;
+  --sidebar-hover: #ececec;
+  --sidebar-active: #e3e3e3;
+
+  --main-bg: #ffffff;
+  --main-border: #e5e5e5;
+  --main-text: #0d0d0d;
+  --main-text-muted: #6b6b6b;
+
+  --user-bubble: #0d0d0d;
+  --user-bubble-text: #ffffff;
+  --ai-bubble: #f4f4f4;
+  --ai-bubble-text: #0d0d0d;
+
+  --input-bg: #ffffff;
+  --input-border: #e5e5e5;
+  --button-primary: #0d0d0d;
+  --button-primary-text: #ffffff;
+
+  --card-bg: #ffffff;
+  --card-border: #e5e5e5;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  /* Dark theme — exactly like ChatGPT dark mode */
+  --sidebar-bg: #171717;
+  --sidebar-border: #2a2a2a;
+  --sidebar-text: #ececec;
+  --sidebar-text-muted: #8e8ea0;
+  --sidebar-hover: #2a2a2a;
+  --sidebar-active: #343434;
+
+  --main-bg: #212121;
+  --main-border: #2a2a2a;
+  --main-text: #ececec;
+  --main-text-muted: #8e8ea0;
+
+  --user-bubble: #2f2f2f;
+  --user-bubble-text: #ececec;
+  --ai-bubble: #212121;
+  --ai-bubble-text: #ececec;
+
+  --input-bg: #2f2f2f;
+  --input-border: #3d3d3d;
+  --button-primary: #ffffff;
+  --button-primary-text: #0d0d0d;
+
+  --card-bg: #2a2a2a;
+  --card-border: #3d3d3d;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--main-bg);
+  color: var(--main-text);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sidebar-hover);
+  border-radius: 3px;
+}
+
+/* Smooth theme transitions */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.05s ease;
 }
