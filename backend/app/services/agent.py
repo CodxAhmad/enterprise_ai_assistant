@@ -92,28 +92,30 @@ async def stream_answer(
     user_query: str,
     chat_history: list
 ):
-    results = retrieve_context(
-        user_query,
-        chat_history
-    )
+    try:
+        results = retrieve_context(
+            user_query,
+            chat_history
+        )
+        chunks = results.get("results", [])
+    except Exception as e:
+        print(f"Retrieval error: {e}")
+        chunks = []
 
     context = ""
     sources = set()
 
-    for chunk in results["results"]:
-
-        if hasattr(chunk, "payload"):
-
+    for chunk in chunks:
+        if hasattr(chunk, "payload") and chunk.payload:
             context += (
-                chunk.payload["chunk_text"]
+                chunk.payload.get("chunk_text", "")
                 + "\n\n"
             )
+            if "filename" in chunk.payload:
+                sources.add(chunk.payload["filename"])
 
-            sources.add(
-                chunk.payload["filename"]
-            )
-
-    prompt = f"""
+    if context.strip():
+        prompt = f"""
 You are an Enterprise Knowledge Assistant.
 
 Rules:
@@ -136,16 +138,30 @@ User Question:
 Sources:
 {", ".join(sources)}
 """
+    else:
+        # No documents found, fallback to general knowledge but note the lack of docs
+        prompt = f"""
+You are an Enterprise Knowledge Assistant. No specific documents in the knowledge base match this query.
 
-    response = client.models.generate_content_stream(
+Please answer the user's question using your general knowledge, but kindly add a brief note at the very end of your response stating: 
+"(Note: No matching enterprise documents were found. This response is based on general knowledge.)"
+
+Chat History:
+{chat_history}
+
+User Question:
+{user_query}
+"""
+
+    response = await client.aio.models.generate_content_stream(
         model="gemini-2.5-flash",
         contents=prompt
     )
 
-    for chunk in response:
-
+    async for chunk in response:
         if chunk.text:
             yield chunk.text
+
             
 
 graph = StateGraph(
