@@ -22,62 +22,49 @@ client = QdrantClient(
     url=settings.QDRANT_URL,
     api_key=settings.QDRANT_API_KEY
 )
-sparse_model = SparseTextEmbedding(
-    model_name="Qdrant/bm25"
-)
+
+# Lazy load sparse model to save RAM at startup
+_sparse_model = None
+
+def _get_sparse_model():
+    global _sparse_model
+    if _sparse_model is None:
+        _sparse_model = SparseTextEmbedding(model_name="Qdrant/bm25")
+    return _sparse_model
+
+
+# Gemini text-embedding-004 produces 768-dimensional vectors
+EMBEDDING_DIM = 768
+
 
 def init_qdrant():
-
     collections = client.get_collections()
-
-    collection_names = [
-        c.name
-        for c in collections.collections
-    ]
+    collection_names = [c.name for c in collections.collections]
 
     if "document_chunks" not in collection_names:
-
         client.create_collection(
-    collection_name="document_chunks",
-
-    vectors_config={
-        "dense": VectorParams(
-            size=384,
-            distance=Distance.COSINE
+            collection_name="document_chunks",
+            vectors_config={
+                "dense": VectorParams(
+                    size=EMBEDDING_DIM,
+                    distance=Distance.COSINE
+                )
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams()
+            }
         )
-    },
-
-    sparse_vectors_config={
-        "sparse": SparseVectorParams()
-    }
-)
-
         print("Created document_chunks collection")
-
     else:
         print("document_chunks already exists")
 
 
-        
-
-def store_chunks(
-    chunks,
-    embeddings,
-    document_id,
-    filename
-):
+def store_chunks(chunks, embeddings, document_id, filename):
     points = []
+    sparse_model = _get_sparse_model()
 
-    for chunk, embedding in zip(
-        chunks,
-        embeddings
-    ):
-
-        sparse_vector = next(
-            sparse_model.embed(
-                [chunk.page_content]
-            )
-        )
+    for chunk, embedding in zip(chunks, embeddings):
+        sparse_vector = next(sparse_model.embed([chunk.page_content]))
 
         points.append(
             PointStruct(
@@ -102,36 +89,28 @@ def store_chunks(
         points=points
     )
 
-def search_documents(
-    query: str,
-    limit: int = 10
-):
 
+def search_documents(query: str, limit: int = 10):
     query_vector = generate_embeddings([query])[0]
 
     results = client.query_points(
-    collection_name="document_chunks",
-    query=query_vector,
-    using="dense",
-    limit=limit
-)
+        collection_name="document_chunks",
+        query=query_vector,
+        using="dense",
+        limit=limit
+    )
 
     return results.points
 
-    
-def hybrid_search(
-    query: str,
-    limit: int = 10
-):
-    dense_vector = generate_embedding(query)
 
-    sparse_embedding = list(
-        sparse_model.embed([query])
-    )[0]
+def hybrid_search(query: str, limit: int = 10):
+    dense_vector = generate_embedding(query)
+    sparse_model = _get_sparse_model()
+    
+    sparse_embedding = list(sparse_model.embed([query]))[0]
 
     results = client.query_points(
         collection_name="document_chunks",
-
         prefetch=[
             {
                 "query": dense_vector,
@@ -147,11 +126,9 @@ def hybrid_search(
                 "limit": limit
             }
         ],
-
         query=FusionQuery(
             fusion=Fusion.RRF
         ),
-
         limit=limit
     )
 
