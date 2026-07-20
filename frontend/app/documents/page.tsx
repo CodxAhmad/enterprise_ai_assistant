@@ -7,12 +7,14 @@ export default function DocumentsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState<string>("")
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (selected: File) => {
     setFile(selected)
     setUploadStatus("idle")
+    setErrorMessage("")
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +43,7 @@ export default function DocumentsPage() {
 
     setIsUploading(true)
     setUploadStatus("idle")
+    setErrorMessage("")
 
     const formData = new FormData()
     formData.append("file", file)
@@ -52,12 +55,16 @@ export default function DocumentsPage() {
         body: formData,
       })
 
-      if (!response.ok) throw new Error("Upload failed")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || "Upload and processing failed")
+      }
 
       setUploadStatus("success")
       setFile(null)
-    } catch {
+    } catch (error: any) {
       setUploadStatus("error")
+      setErrorMessage(error.message || "Failed to process document.")
     } finally {
       setIsUploading(false)
     }
@@ -273,17 +280,19 @@ export default function DocumentsPage() {
               style={{
                 marginTop: "16px",
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 gap: "10px",
                 padding: "12px 16px",
                 borderRadius: "10px",
                 background: "rgba(239, 68, 68, 0.1)",
                 color: "#dc2626",
                 fontSize: "14px",
+                whiteSpace: "pre-wrap",
+                lineHeight: "1.5",
               }}
             >
-              <AlertCircle size={16} />
-              Failed to process document. Please check your connection and try again.
+              <AlertCircle size={16} style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div>{errorMessage}</div>
             </div>
           )}
 
