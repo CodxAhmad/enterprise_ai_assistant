@@ -1,19 +1,57 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { Send, Bot, User, Sparkles } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
+import ReactMarkdown from "react-markdown"
 
 type Message = {
   role: "user" | "ai"
   content: string
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  // Read session ID from query params
+  const rawSessionId = searchParams.get("session")
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // 1. Handle session initialization and changes
+  useEffect(() => {
+    if (!rawSessionId) {
+      // If no session ID in URL, generate a new one and redirect
+      const newId = Math.random().toString(36).substring(2, 15)
+      router.replace(`/?session=${newId}`)
+    } else {
+      setSessionId(rawSessionId)
+      // Fetch history for this session
+      fetchSessionHistory(rawSessionId)
+    }
+  }, [rawSessionId])
+
+  const fetchSessionHistory = async (id: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+      const res = await fetch(`${apiUrl}/chat/session/${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setMessages(data)
+      } else {
+        setMessages([])
+      }
+    } catch (e) {
+      console.error("Error loading chat history:", e)
+      setMessages([])
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -23,7 +61,6 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages])
 
-  // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
     e.target.style.height = "auto"
@@ -31,15 +68,19 @@ export default function ChatPage() {
   }
 
   const handleSubmit = async () => {
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading || !sessionId) return
 
     const userQuery = input.trim()
     setInput("")
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto"
     }
+    
+    // Add user message locally
     setMessages((prev) => [...prev, { role: "user", content: userQuery }])
     setIsLoading(true)
+    
+    // Prepare blank AI message for streaming
     setMessages((prev) => [...prev, { role: "ai", content: "" }])
 
     try {
@@ -49,7 +90,7 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: userQuery,
-          session_id: "default-session",
+          session_id: sessionId,
         }),
       })
 
@@ -77,7 +118,12 @@ export default function ChatPage() {
           }
         }
       }
-    } catch {
+      
+      // Dispatch update event so the sidebar updates its title list
+      window.dispatchEvent(new Event("chat-updated"))
+
+    } catch (e) {
+      console.error(e)
       setMessages((prev) => {
         const newMessages = [...prev]
         newMessages[newMessages.length - 1].content =
@@ -227,7 +273,6 @@ export default function ChatPage() {
                     borderRadius: "12px",
                     fontSize: "15px",
                     lineHeight: "1.65",
-                    whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                   }}
                 >
@@ -237,8 +282,12 @@ export default function ChatPage() {
                       <span className="thinking-dot" style={{ animationDelay: "0.2s" }}>●</span>{" "}
                       <span className="thinking-dot" style={{ animationDelay: "0.4s" }}>●</span>
                     </span>
+                  ) : msg.role === "ai" ? (
+                    <div className="prose dark:prose-invert" style={{ fontSize: "15px" }}>
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                   ) : (
-                    msg.content
+                    <div>{msg.content}</div>
                   )}
                 </div>
               </div>
@@ -336,7 +385,21 @@ export default function ChatPage() {
         textarea::placeholder {
           color: var(--main-text-muted);
         }
+        /* Style markdown outputs slightly */
+        .prose p { margin: 0 0 12px; }
+        .prose p:last-child { margin: 0; }
+        .prose ul, .prose ol { margin: 0 0 12px; padding-left: 20px; }
+        .prose li { margin: 0 0 4px; }
+        .prose strong { font-weight: 600; }
       `}</style>
     </div>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>Loading Chat...</div>}>
+      <ChatPageContent />
+    </Suspense>
   )
 }

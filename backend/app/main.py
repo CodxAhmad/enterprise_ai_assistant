@@ -24,6 +24,7 @@ app.add_middleware(
 from app.routers.documents import router as document_router
 from app.routers import chat
 from app.services.vector_store import init_qdrant
+from app.database import Base, engine
 
 app.include_router(document_router)
 app.include_router(chat.router)
@@ -31,6 +32,8 @@ app.include_router(chat.router)
 
 @app.on_event("startup")
 def startup_event():
+    print("Creating database tables if not exist...")
+    Base.metadata.create_all(bind=engine)
     print("Initializing Qdrant collections...")
     init_qdrant()
 
