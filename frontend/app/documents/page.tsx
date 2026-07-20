@@ -27,7 +27,8 @@ export default function DocumentsPage() {
     formData.append("file", file)
 
     try {
-      const response = await fetch("http://localhost:8000/upload", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+      const response = await fetch(`${apiUrl}/documents/upload`, {
         method: "POST",
         body: formData,
       })
@@ -46,7 +47,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b border-gray-200 px-6 font-semibold">
+      <div className="flex h-14 items-center border-b px-6 font-semibold">
         Document Management
       </div>
       
@@ -60,12 +61,12 @@ export default function DocumentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-10 flex flex-col items-center justify-center text-center bg-gray-50/50">
-                <div className="rounded-full bg-blue-50 p-3 mb-4">
-                  <Upload className="h-6 w-6 text-blue-500" />
+              <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center text-center bg-muted/50">
+                <div className="rounded-full bg-primary/10 p-3 mb-4">
+                  <Upload className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Click to upload or drag and drop</h3>
-                <p className="text-xs text-gray-500 mb-4">PDF, DOCX, TXT, or CSV (max. 10MB)</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">Click to upload or drag and drop</h3>
+                <p className="text-xs text-muted-foreground mb-4">PDF, DOCX, TXT, or CSV (max. 10MB)</p>
                 <input
                   type="file"
                   id="file-upload"
@@ -79,9 +80,9 @@ export default function DocumentsPage() {
               </div>
 
               {file && (
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-md bg-white">
+                <div className="flex items-center justify-between p-3 border rounded-md bg-background">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <FileText className="h-5 w-5 text-gray-400 shrink-0" />
+                    <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                     <span className="text-sm font-medium truncate">{file.name}</span>
                   </div>
                   <Button size="sm" onClick={handleUpload} disabled={isUploading}>

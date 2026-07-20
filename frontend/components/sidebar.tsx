@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { MessageSquare, FileText, LayoutDashboard, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "../lib/utils"
+import { ThemeToggle } from "./theme-toggle"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -16,8 +17,8 @@ export function Sidebar() {
   ]
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r border-gray-200 bg-gray-50/50">
-      <div className="flex h-14 items-center border-b border-gray-200 px-4 font-semibold">
+    <div className="flex h-screen w-64 flex-col border-r bg-muted/30">
+      <div className="flex h-14 items-center border-b px-4 font-semibold">
         Enterprise AI
       </div>
       <div className="flex-1 overflow-auto py-4">
@@ -29,8 +30,8 @@ export function Sidebar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900",
-                  pathname === link.href ? "bg-gray-200 text-gray-900" : ""
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                  pathname === link.href ? "bg-muted text-foreground" : ""
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -40,10 +41,11 @@ export function Sidebar() {
           })}
         </nav>
       </div>
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t space-y-2">
+        <ThemeToggle />
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 text-sm font-medium"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground text-sm font-medium"
         >
           <LogOut className="h-4 w-4" />
           Logout
